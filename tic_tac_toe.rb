@@ -1,19 +1,23 @@
-def all_equal?(arr)
-  arr.uniq.size <= 1 && (arr.sample == 'x' || arr.sample == 'o')
-end
+module Helper
+  def all_equal?(arr)
+    arr.uniq.size <= 1 && (arr.sample == 'x' || arr.sample == 'o')
+  end
 
-def check_winner(array)
-  array.each { |element| return element.sample if all_equal?(element) }
-  array.transpose.each { |element| return element.sample if all_equal?(element) }
-  left_diagonal = (0..2).collect { |i| array[i][i] }
-  return left_diagonal.sample if all_equal?(left_diagonal)
+  def check_winner(array)
+    array.each { |element| return element.sample if all_equal?(element) }
+    array.transpose.each { |element| return element.sample if all_equal?(element) }
+    left_diagonal = (0..2).collect { |i| array[i][i] }
+    return left_diagonal.sample if all_equal?(left_diagonal)
 
-  right_diagonal = [array[0][2], array[1][1], array[2, 0]]
-  right_diagonal.sample if all_equal?(right_diagonal)
+    right_diagonal = [array[0][2], array[1][1], array[2, 0]]
+    right_diagonal.sample if all_equal?(right_diagonal)
+  end
 end
 
 class Game
   attr_accessor :players, :board, :round
+
+  include Helper
 
   def initialize
     @players = []
@@ -39,15 +43,16 @@ class Game
   def play
     get_players(1)
     get_players(2)
+    puts "#{players[0].name} vs #{players[1].name}, start"
     print_board
-    get_moves
+    game_start
   end
 
   def print_round
-    puts "Current round is #{@round}"
+    puts "Round: #{@round}"
   end
 
-  def get_moves
+  def game_start
     loop do
       if @round > 9
         puts 'DRAW'
@@ -74,31 +79,35 @@ class Game
   end
 
   def put_move(player)
-    move = get_cords
-    x = move[0]
-    y = move[1]
-    if @board[x][y] == 'x' || @board[x][y] == 'o'
+    move = cords
+    check_existing(player, @board, move[0], move[1])
+  end
+
+  def cords
+    cordinates = gets.chomp
+
+    if cords_satisfy?(cordinates)
+      [cordinates[0].to_i, cordinates[2].to_i]
+    else
+      puts 'Invalid input. Enter cords seperated by space!!'
+      print_board
+      cords
+    end
+  end
+
+  def cords_satisfy?(cordinates)
+    cordinates.length == 3 && cordinates[0] =~ /^-?[0-2]+$/ && cordinates[1] == ' ' && cordinates[2] =~ /^-?[0-2]+$/
+  end
+
+  def check_existing(player, board, x, y)
+    if board[x][y] == 'x' || board[x][y] == 'o'
       puts 'already exists, choose another square'
       print_board
       put_move(player)
     else
-      @board[x][y] = player.move
+      board[x][y] = player.move
       print_board
       @round += 1
-    end
-  end
-
-  def get_cords
-    puts 'Enter cords seperated by space: '
-    result = gets.chomp
-
-    if result.length == 3 && result[0] =~ /^-?[0-2]+$/ && result[1] == ' ' && result[2] =~ /^-?[0-2]+$/
-      x = result[0].to_i
-      y = result[2].to_i
-      [x, y]
-    else
-      puts 'Invalid input. Enter cords seperated by space:'
-      get_cords
     end
   end
 end
@@ -117,7 +126,6 @@ class Player
              'o'
            end
     @move = move
-    puts "Player #{player_number}'s name is #{name} and his move is #{move}"
   end
 end
 
